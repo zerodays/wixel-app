@@ -10,10 +10,13 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   List<Device> devices = [];
+  bool loading = true;
   Color currentColor = Color(0xff443a49);
 
   checkDeviceWixlable(NetworkAddress address) async {
+    print(address.ip);
     if (!address.exists) return;
+    print('found ip ${address.ip}');
 
     try {
       Device newDevice = new Device(address.ip);
@@ -26,20 +29,26 @@ class _HomeState extends State<Home> {
     } catch (_) {}
   }
 
+  void loadFinished() {
+    setState(() {
+      loading = false;
+    });
+  }
+
   @override
   void initState() {
     const port = 6969;
     final stream = NetworkAnalyzer.discover2(
-      '10.40.5',
+      '192.168.1',
       port,
-      timeout: Duration(milliseconds: 5000),
+      timeout: Duration(milliseconds: 10000),
     );
-    stream.listen(checkDeviceWixlable);
+    stream.listen(checkDeviceWixlable).onDone(this.loadFinished);
 
     super.initState();
   }
 
-  Widget getDeviceWidget(Device device) {     
+  Widget getDeviceWidget(Device device) {
     return Card(
       child: ListTile(
         title: Text(device.name),
@@ -79,6 +88,13 @@ class _HomeState extends State<Home> {
         )),
         body: Column(
           children: [
+            loading
+                ? LinearProgressIndicator(
+                    minHeight: 4,
+                  )
+                : Container(
+                    height: 4,
+                  ),
             Container(
               height: 16,
             ),
